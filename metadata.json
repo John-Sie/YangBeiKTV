@@ -1,0 +1,7 @@
+{
+  "name": "Yangbei KTV",
+  "description": "A professional KTV song ordering system with AI OCR capabilities, ranking boards",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
