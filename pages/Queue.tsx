@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Song, SongRequest, User } from '../types';
 import { updateRequestStatus, toggleFavorite } from '../services/storage';
-import { Music, Mic2, User as UserIcon, Clock, Zap, CheckCircle2, Heart } from 'lucide-react';
+import { Music, Mic2, User as UserIcon, Clock, Zap, CheckCircle2, Heart, XCircle } from 'lucide-react';
 import { useToast } from '../components/Toast';
 
 interface QueueProps {
@@ -23,6 +23,22 @@ export const Queue: React.FC<QueueProps> = ({ requests, songs, users, user: curr
       // Sort by requestedAt ASCENDING (Oldest First - FIFO)
       return activeQueue.sort((a, b) => new Date(a.requestedAt).getTime() - new Date(b.requestedAt).getTime());
   }, [requests]);
+
+  const handleCancelSong = async (reqId: string, songName: string) => {
+    // 1. Optimistic Update via Parent
+    onUpdateStatus(reqId, 'cancelled');
+    
+    // 2. Show Feedback
+    showToast(`"${songName}" 已切歌`, 'info');
+
+    // 3. Actual Backend Update
+    try {
+        await updateRequestStatus(reqId, 'cancelled');
+    } catch (err) {
+        console.error("Cancel failed", err);
+        showToast("操作失敗，請檢查網路連線", 'error');
+    }
+  };
 
   const handleMarkPlayed = async (reqId: string, songName: string) => {
     // 1. Optimistic Update via Parent
@@ -136,6 +152,16 @@ export const Queue: React.FC<QueueProps> = ({ requests, songs, users, user: curr
                                 title={isFavorite ? "已收藏" : "加入收藏"}
                             >
                                 <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+                            </button>
+
+                            {/* Cancel Button (Red Rounded) */}
+                            <button 
+                                onClick={() => handleCancelSong(req.id, song?.title || '')}
+                                className="flex items-center gap-1 px-3 py-2 bg-red-500 text-white hover:bg-red-600 rounded-full text-sm font-bold shadow-md shadow-red-500/20 transition-all active:scale-95 whitespace-nowrap"
+                                title="切歌 (將移出播放清單)"
+                            >
+                                <XCircle size={16} />
+                                <span>切歌</span>
                             </button>
 
                             {/* Mark Played Button (Green Rounded) */}
